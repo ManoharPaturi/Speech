@@ -341,11 +341,12 @@ class MagpieTTSLhotseDataset(torch.utils.data.Dataset):
                     audio_array = normalize_volume(audio_array)
                 audio = torch.from_numpy(audio_array)
                 # Pad audio to be multiple of downsample factor
-                audio = torch.nn.functional.pad(
-                    audio,
-                    (0, self.codec_model_samples_per_frame - (audio.shape[0] % self.codec_model_samples_per_frame)),
-                    value=0,
-                )
+                if (remainder := audio.shape[0] % self.codec_model_samples_per_frame) != 0:
+                    audio = torch.nn.functional.pad(
+                        audio,
+                        (0, self.codec_model_samples_per_frame - remainder),
+                        value=0,
+                    )
                 audio_len = audio.shape[0]
                 spec_len = int(audio_len / self.codec_model_samples_per_frame) + 1  # +1 for EOS
                 audio_list.append(audio)

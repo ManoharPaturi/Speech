@@ -545,11 +545,12 @@ class MagpieTTSDataset(TextToSpeechDataset):
             )
             audio = torch.tensor(audio_array, dtype=torch.float32)
             # Pad audio to be multiple of downsample factor
-            audio = torch.nn.functional.pad(
-                audio,
-                (0, self.codec_model_samples_per_frame - (audio.shape[0] % self.codec_model_samples_per_frame)),
-                value=0,
-            )
+            if (remainder := audio.shape[0] % self.codec_model_samples_per_frame) != 0:
+                audio = torch.nn.functional.pad(
+                    audio,
+                    (0, self.codec_model_samples_per_frame - remainder),
+                    value=0,
+                )
             audio_len = audio.shape[0]
             example['audio_filepath'] = data.manifest_entry['audio_filepath']
             example['audio'] = audio
